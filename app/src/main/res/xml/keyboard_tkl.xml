@@ -3,7 +3,7 @@
     android:keyWidth="8.33%"
     android:keyHeight="42dp"
     android:horizontalGap="0%"
-    android:verticalGap="2dp">
+    android:verticalGap="0dp">
 
     <!-- Row 0: Function keys -->
     <Row
@@ -104,22 +104,20 @@
         <Key android:codes="-200" android:keyLabel="Ctrl" android:keyWidth="10.42%" />
     </Row>
 
-    <!-- Row 6: Navigation cluster -->
+    <!-- Row 6: Nav island + Up arrow -->
     <Row>
         <Key android:codes="-59" android:keyLabel="Ins" android:keyWidth="8.33%" />
         <Key android:codes="-55" android:keyLabel="Home" android:keyWidth="8.33%" />
         <Key android:codes="-57" android:keyLabel="PgUp" android:keyWidth="8.33%" />
-        <Key android:codes="-60" android:keyLabel="PrtSc" android:keyWidth="8.33%" />
-        <Key android:codes="-61" android:keyLabel="ScLk" android:keyWidth="8.33%" />
-        <Key android:codes="-62" android:keyLabel="Pause" android:keyWidth="8.33%" />
+        <Key android:codes="-53" android:keyLabel="↑" android:keyWidth="8.33%" android:horizontalGap="58.34%" />
     </Row>
 
-    <!-- Row 7: Arrow cluster -->
+    <!-- Row 7: Scroll/Pause island + Arrow cluster -->
     <Row>
-        <Key android:codes="-55" android:keyLabel="" android:keyWidth="8.33%" />
-        <Key android:codes="-53" android:keyLabel="↑" android:keyWidth="8.33%" />
-        <Key android:codes="-56" android:keyLabel="" android:keyWidth="8.33%" />
-        <Key android:codes="-51" android:keyLabel="←" android:keyWidth="8.33%" />
+        <Key android:codes="-61" android:keyLabel="ScLk" android:keyWidth="8.33%" />
+        <Key android:codes="-62" android:keyLabel="Pause" android:keyWidth="8.33%" />
+        <Key android:codes="-58" android:keyLabel="PgDn" android:keyWidth="8.33%" />
+        <Key android:codes="-51" android:keyLabel="←" android:keyWidth="8.33%" android:horizontalGap="50.01%" />
         <Key android:codes="-54" android:keyLabel="↓" android:keyWidth="8.33%" />
         <Key android:codes="-52" android:keyLabel="→" android:keyWidth="8.33%" />
     </Row>
