@@ -7,6 +7,7 @@ import android.inputmethodservice.Keyboard.Key;
 import android.inputmethodservice.KeyboardView;
 import android.os.Handler;
 import android.os.Looper;
+import android.view.HapticFeedbackConstants;
 import android.view.KeyEvent;
 import android.view.View;
 import android.view.inputmethod.EditorInfo;
@@ -241,6 +242,9 @@ public class KeyboardService extends InputMethodService implements KeyboardView.
 
     @Override
     public void onPress(int primaryCode) {
+        if (keyboardView != null) {
+            keyboardView.performHapticFeedback(HapticFeedbackConstants.VIRTUAL_KEY);
+        }
     }
 
     @Override
