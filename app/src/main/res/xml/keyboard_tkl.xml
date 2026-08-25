@@ -100,7 +100,7 @@
         <Key android:codes="-201" android:keyLabel="Alt" android:keyWidth="8.33%" />
         <Key android:codes="-202" android:keyLabel="Fn" android:keyWidth="8.33%" />
         <Key android:codes="32" android:keyLabel="" android:keyHorizontalGap="0%" android:keyWidth="33.33%" />
-        <Key android:codes="60" android:keyLabel="<" android:keyWidth="8.33%" />
+        <Key android:codes="60" android:keyLabel="&lt;" android:keyWidth="8.33%" />
         <Key android:codes="-201" android:keyLabel="Alt" android:keyWidth="8.33%" />
         <Key android:codes="-200" android:keyLabel="Ctrl" android:keyWidth="10.42%" />
     </Row>
