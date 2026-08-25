@@ -1,11 +1,6 @@
 package com.admin.keyboard;
 
 import android.content.Context;
-import android.graphics.Canvas;
-import android.graphics.Color;
-import android.graphics.Paint;
-import android.graphics.Rect;
-import android.graphics.drawable.GradientDrawable;
 import android.inputmethodservice.InputMethodService;
 import android.inputmethodservice.Keyboard;
 import android.inputmethodservice.Keyboard.Key;
@@ -62,21 +57,12 @@ public class KeyboardService extends InputMethodService implements KeyboardView.
         keyboardView.setKeyboard(qwertyKeyboard);
         keyboardView.setOnKeyboardActionListener(this);
         keyboardView.setPreviewEnabled(false);
-        keyboardView.setKeyBackground(createKeyBackground());
         return keyboardView;
     }
 
-    private GradientDrawable createKeyBackground() {
-        GradientDrawable bg = new GradientDrawable();
-        bg.setColor(Color.parseColor("#2D2D2D"));
-        bg.setCornerRadius(8f);
-        bg.setStroke(1, Color.parseColor("#3D3D3D"));
-        return bg;
-    }
-
     @Override
-    public void onStartInputView(java.lang.String text, boolean restarting) {
-        super.onStartInputView(text, restarting);
+    public void onStartInputView(EditorInfo attribute, boolean restarting) {
+        super.onStartInputView(attribute, restarting);
         isShifted = false;
         isCtrl = false;
         isAlt = false;

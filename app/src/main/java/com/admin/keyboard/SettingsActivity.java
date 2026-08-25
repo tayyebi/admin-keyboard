@@ -48,7 +48,7 @@ public class SettingsActivity extends Activity {
     }
 
     private void updateStatus(TextView statusText) {
-        InputMethodManager imm = (InputMethodManager) getSystemService(INPUT_METHOD_METHOD);
+        InputMethodManager imm = (InputMethodManager) getSystemService(INPUT_METHOD_SERVICE);
         if (imm != null) {
             boolean isEnabled = false;
             String[] enabledMethods = null;

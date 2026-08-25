@@ -4,6 +4,7 @@
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:background="#1E1E1E"
+    android:keyBackground="@drawable/key_background"
     android:keyTextColor="#D4D4D4"
     android:keyPreviewLayout="@layout/key_preview"
     android:shadowColor="#000000"
