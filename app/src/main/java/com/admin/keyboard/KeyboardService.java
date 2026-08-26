@@ -241,9 +241,7 @@ public class KeyboardService extends InputMethodService implements KeyboardView.
 
     private void releaseShift() {
         isShifted = false;
-        if (keyboardView != null) {
-            keyboardView.setShifted(false);
-        }
+        updateModifierStates();
     }
 
     private void sendKey(int keyCode) {
@@ -276,7 +274,6 @@ public class KeyboardService extends InputMethodService implements KeyboardView.
 
     private void updateModifierStates() {
         if (keyboardView == null || qwertyKeyboard == null) return;
-        keyboardView.setShifted(isShifted);
         // Update key labels for modifiers and language key
         List<Keyboard.Key> keys = qwertyKeyboard.getKeys();
         for (Keyboard.Key key : keys) {
