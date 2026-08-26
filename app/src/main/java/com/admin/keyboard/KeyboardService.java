@@ -319,7 +319,8 @@ public class KeyboardService extends InputMethodService implements KeyboardView.
         String label = "\uD83C\uDF10";
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
             try {
-                InputMethodSubtype subtype = getCurrentInputMethodSubtype();
+                InputMethodManager imm = (InputMethodManager) getSystemService(INPUT_METHOD_SERVICE);
+                InputMethodSubtype subtype = imm != null ? imm.getCurrentInputMethodSubtype() : null;
                 if (subtype != null) {
                     Locale locale = null;
                     String tag = subtype.getLanguageTag();
