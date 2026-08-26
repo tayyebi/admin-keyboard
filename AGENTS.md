@@ -45,4 +45,4 @@ Guidelines:
 - Adapt the email domain based on the model provider
 - For this repository, commits made by opencode use the model name `ox-alpha`;
   its developing organization is undisclosed, so use
-  `ox-alpha@users.noreply.github.com` rather than inventing a provider domain
+  `ox-alpha@models.noreply.github.com.invalid` rather than inventing a provider domain
