@@ -4,31 +4,49 @@ import android.inputmethodservice.InputMethodService;
 import android.inputmethodservice.Keyboard;
 import android.inputmethodservice.Keyboard.Key;
 import android.inputmethodservice.KeyboardView;
-import android.os.Build;
-import android.os.IBinder;
+import android.content.SharedPreferences;
+import android.os.SystemClock;
 import android.view.HapticFeedbackConstants;
 import android.view.KeyEvent;
 import android.view.View;
 import android.view.inputmethod.EditorInfo;
 import android.view.inputmethod.InputConnection;
-import android.view.inputmethod.InputMethodManager;
-import android.view.inputmethod.InputMethodSubtype;
 
 import java.util.HashMap;
 import java.util.List;
-import java.util.Locale;
 import java.util.Map;
 
 public class KeyboardService extends InputMethodService implements KeyboardView.OnKeyboardActionListener {
 
+    public static final String PREFS_NAME = "keyboard_preferences";
+    public static final String PREF_LAYOUT = "keyboard_layout";
+    public static final String LAYOUT_TKL = "tkl";
+    public static final String LAYOUT_T9 = "t9";
+
     private KeyboardView keyboardView;
     private Keyboard currentKeyboard;
-    private Keyboard qwertyKeyboard;
+    private Keyboard englishKeyboard;
+    private Keyboard persianKeyboard;
+    private Keyboard englishT9Keyboard;
+    private Keyboard persianT9Keyboard;
+    private boolean isPersian = false;
+    private boolean isT9 = false;
     private boolean isShifted = false;
     private boolean isCtrl = false;
     private boolean isAlt = false;
     private boolean isFn = false;
-    private String languageLabel = "\uD83C\uDF10";
+    private String languageLabel = "EN";
+    private int lastT9Code = 0;
+    private int lastT9Index = 0;
+    private long lastT9PressTime = 0;
+
+    private static final long T9_REPEAT_TIMEOUT_MS = 800;
+    private static final String[] T9_ENGLISH = {
+            ".?!", "abc", "def", "ghi", "jkl", "mno", "pqrs", "tuv", "wxyz"
+    };
+    private static final String[] T9_PERSIAN = {
+            "،؟.", "ابپت", "ثجچح", "خدذر", "زژسش", "صضطظ", "عغفق", "کگلم", "نوهی"
+    };
 
     private static final Map<Integer, String> SHIFTED_SYMBOLS = new HashMap<Integer, String>();
 
@@ -85,17 +103,29 @@ public class KeyboardService extends InputMethodService implements KeyboardView.
     @Override
     public View onCreateInputView() {
         keyboardView = (KeyboardView) getLayoutInflater().inflate(R.layout.keyboard_view, null);
-        qwertyKeyboard = new Keyboard(this, R.xml.keyboard_tkl);
-        keyboardView.setKeyboard(qwertyKeyboard);
+        englishKeyboard = new Keyboard(this, R.xml.keyboard_tkl);
+        persianKeyboard = new Keyboard(this, R.xml.keyboard_tkl_fa);
+        englishT9Keyboard = new Keyboard(this, R.xml.keyboard_t9);
+        persianT9Keyboard = new Keyboard(this, R.xml.keyboard_t9_fa);
+        SharedPreferences preferences = getSharedPreferences(PREFS_NAME, MODE_PRIVATE);
+        isT9 = LAYOUT_T9.equals(preferences.getString(PREF_LAYOUT, LAYOUT_TKL));
+        currentKeyboard = getSelectedKeyboard();
+        keyboardView.setKeyboard(currentKeyboard);
         keyboardView.setOnKeyboardActionListener(this);
         keyboardView.setPreviewEnabled(false);
-        updateLanguageLabel();
+        updateModifierStates();
         return keyboardView;
     }
 
     @Override
     public void onStartInputView(EditorInfo attribute, boolean restarting) {
         super.onStartInputView(attribute, restarting);
+        isT9 = LAYOUT_T9.equals(getSharedPreferences(PREFS_NAME, MODE_PRIVATE)
+                .getString(PREF_LAYOUT, LAYOUT_TKL));
+        if (keyboardView != null) {
+            currentKeyboard = getSelectedKeyboard();
+            keyboardView.setKeyboard(currentKeyboard);
+        }
         isShifted = false;
         isCtrl = false;
         isAlt = false;
@@ -107,6 +137,8 @@ public class KeyboardService extends InputMethodService implements KeyboardView.
     public void onKey(int primaryCode, int[] keyCodes) {
         InputConnection ic = getCurrentInputConnection();
         if (ic == null) return;
+        boolean isT9Character = isT9 && primaryCode <= -301 && primaryCode >= -309;
+        if (!isT9Character) lastT9Code = 0;
 
         switch (primaryCode) {
             case KEY_SHIFT:
@@ -211,7 +243,7 @@ public class KeyboardService extends InputMethodService implements KeyboardView.
                 clearModifiers();
                 break;
             case KEY_LANG:
-                switchNextInputLanguage();
+                switchKeyboardLanguage();
                 break;
             default:
                 if (primaryCode >= KEY_F12 && primaryCode <= KEY_F1) {
@@ -234,6 +266,8 @@ public class KeyboardService extends InputMethodService implements KeyboardView.
                     }
                     releaseShift();
                     clearModifiers();
+                } else if (isT9Character) {
+                    handleT9Key(primaryCode, ic);
                 }
                 break;
         }
@@ -273,9 +307,9 @@ public class KeyboardService extends InputMethodService implements KeyboardView.
     }
 
     private void updateModifierStates() {
-        if (keyboardView == null || qwertyKeyboard == null) return;
+        if (keyboardView == null || currentKeyboard == null) return;
         // Update key labels for modifiers and language key
-        List<Keyboard.Key> keys = qwertyKeyboard.getKeys();
+        List<Keyboard.Key> keys = currentKeyboard.getKeys();
         for (Keyboard.Key key : keys) {
             if (key.codes == null || key.codes.length == 0) continue;
             int code = key.codes[0];
@@ -292,54 +326,37 @@ public class KeyboardService extends InputMethodService implements KeyboardView.
         keyboardView.invalidateAllKeys();
     }
 
-    private void switchNextInputLanguage() {
-        boolean switched = false;
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
-            switched = switchToNextInputMethod(false);
-        } else if (keyboardView != null) {
-            InputMethodManager imm = (InputMethodManager) getSystemService(INPUT_METHOD_SERVICE);
-            IBinder token = keyboardView.getApplicationWindowToken();
-            if (imm != null && token != null) {
-                switched = imm.switchToNextInputMethod(token, false);
-            }
-        }
-        if (!switched) {
-            InputMethodManager imm = (InputMethodManager) getSystemService(INPUT_METHOD_SERVICE);
-            if (imm != null) {
-                imm.showInputMethodPicker();
-            }
-        }
+    private void switchKeyboardLanguage() {
+        isPersian = !isPersian;
+        currentKeyboard = getSelectedKeyboard();
+        languageLabel = isPersian ? "FA" : "EN";
+        keyboardView.setKeyboard(currentKeyboard);
         clearModifiers();
+        updateModifierStates();
     }
 
-    private void updateLanguageLabel() {
-        String label = "\uD83C\uDF10";
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-            try {
-                InputMethodManager imm = (InputMethodManager) getSystemService(INPUT_METHOD_SERVICE);
-                InputMethodSubtype subtype = imm != null ? imm.getCurrentInputMethodSubtype() : null;
-                if (subtype != null) {
-                    Locale locale = null;
-                    String tag = subtype.getLanguageTag();
-                    if (tag != null && !tag.isEmpty()) {
-                        locale = Locale.forLanguageTag(tag);
-                    }
-                    if (locale == null) {
-                        String loc = subtype.getLocale();
-                        if (loc != null && !loc.isEmpty()) {
-                            locale = new Locale(loc);
-                        }
-                    }
-                    if (locale != null && !locale.getLanguage().isEmpty()) {
-                        label = locale.getLanguage().toUpperCase(locale);
-                    }
-                }
-            } catch (Exception e) {
-                // keep fallback label
-            }
+    private Keyboard getSelectedKeyboard() {
+        if (isT9) return isPersian ? persianT9Keyboard : englishT9Keyboard;
+        return isPersian ? persianKeyboard : englishKeyboard;
+    }
+
+    private void handleT9Key(int primaryCode, InputConnection ic) {
+        String[] groups = isPersian ? T9_PERSIAN : T9_ENGLISH;
+        int groupIndex = -301 - primaryCode;
+        String group = groups[groupIndex];
+        long now = SystemClock.uptimeMillis();
+        if (primaryCode == lastT9Code && now - lastT9PressTime < T9_REPEAT_TIMEOUT_MS) {
+            ic.deleteSurroundingText(1, 0);
+            lastT9Index = (lastT9Index + 1) % group.length();
+        } else {
+            lastT9Index = 0;
         }
-        languageLabel = label;
-        updateModifierStates();
+        char character = group.charAt(lastT9Index);
+        String text = String.valueOf(isShifted && !isPersian
+                ? Character.toUpperCase(character) : character);
+        ic.commitText(text, 1);
+        lastT9Code = primaryCode;
+        lastT9PressTime = now;
     }
 
     @Override

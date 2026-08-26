@@ -36,6 +36,9 @@ Co-authored-by: Gemini <gemini@google.com>
 ```
 
 Guidelines:
+- Before creating each commit, double-check the active model name and use that
+  actual model name in the `Co-authored-by` footer; do not reuse a name from a
+  previous session or commit.
 - Always include this footer in every commit message
 - Place it at the end of the commit message body
 - Use the actual model name being used (e.g., "Claude", "GPT-4", "Gemini", "Llama", etc.)

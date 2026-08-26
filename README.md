@@ -1,12 +1,13 @@
-# TKL Keyboard - Android TenKeyLess Keyboard
+# Admin Keyboard for Android
 
-A tenkeyless (TKL) layout keyboard for Android with full function row, navigation cluster, and arrow keys.
+An Android keyboard for administration work, with TKL and T9 layouts and English/Persian language support.
 
 ## Features
 
 - **TKL Layout**: No numeric keypad, includes F1-F12, navigation keys, and arrow cluster
+- **T9 Layout**: Compact multi-tap phone layout, selectable from Settings
 - **Modifier Keys**: Ctrl, Alt, Fn, Shift with toggle states and shifted symbol input (!@#$%^&*...)
-- **Language Switcher**: Globe key cycles installed keyboards/languages
+- **Language Switcher**: Globe key toggles between English and Persian
 - **Dark Theme**: Modern dark UI similar to VS Code
 - **Full Navigation**: Home, End, Page Up, Page Down, Insert, Delete
 - **Special Keys**: Escape, Tab, Caps Lock, Print Screen, Scroll Lock, Pause
@@ -16,7 +17,8 @@ A tenkeyless (TKL) layout keyboard for Android with full function row, navigatio
 1. Open in Android Studio
 2. Build and run on device/emulator
 3. Enable keyboard in Settings → System → Languages & Input → Virtual Keyboard
-4. Switch to TKL Keyboard
+4. Switch to Admin Keyboard
+5. Open Admin Keyboard Settings and choose TKL or T9
 
 ## Package
 

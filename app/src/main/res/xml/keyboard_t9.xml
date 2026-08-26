@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Keyboard xmlns:android="http://schemas.android.com/apk/res/android"
+    android:keyWidth="33.33%"
+    android:keyHeight="64dp"
+    android:horizontalGap="0%"
+    android:verticalGap="0dp">
+    <Row>
+        <Key android:codes="-301" android:keyLabel="1  .?!" />
+        <Key android:codes="-302" android:keyLabel="2  ABC" />
+        <Key android:codes="-303" android:keyLabel="3  DEF" />
+    </Row>
+    <Row>
+        <Key android:codes="-304" android:keyLabel="4  GHI" />
+        <Key android:codes="-305" android:keyLabel="5  JKL" />
+        <Key android:codes="-306" android:keyLabel="6  MNO" />
+    </Row>
+    <Row>
+        <Key android:codes="-307" android:keyLabel="7  PQRS" />
+        <Key android:codes="-308" android:keyLabel="8  TUV" />
+        <Key android:codes="-309" android:keyLabel="9  WXYZ" />
+    </Row>
+    <Row>
+        <Key android:codes="-205" android:keyLabel="EN" />
+        <Key android:codes="32" android:keyLabel="0  Space" />
+        <Key android:codes="-5" android:keyLabel="Bksp" />
+    </Row>
+    <Row>
+        <Key android:codes="-1" android:keyLabel="Shift" />
+        <Key android:codes="-4" android:keyLabel="Enter" />
+        <Key android:codes="-200" android:keyLabel="Ctrl" />
+    </Row>
+</Keyboard>

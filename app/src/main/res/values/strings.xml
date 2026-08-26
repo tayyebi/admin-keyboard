@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">TKL Keyboard</string>
-    <string name="settings_title">TKL Keyboard Settings</string>
-    <string name="subtype_label">English (TKL)</string>
+    <string name="app_name">Admin Keyboard</string>
+    <string name="settings_title">Admin Keyboard Settings</string>
+    <string name="subtype_label">Admin Keyboard</string>
 </resources>

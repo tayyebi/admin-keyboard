@@ -19,10 +19,43 @@
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="TenKeyLess Keyboard"
+        android:text="English and Persian keyboard"
         android:textSize="16sp"
         android:textColor="#888888"
-        android:layout_marginBottom="48dp" />
+        android:layout_marginBottom="24dp" />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Keyboard layout"
+        android:textColor="#D4D4D4"
+        android:textSize="16sp" />
+
+    <RadioGroup
+        android:id="@+id/layout_group"
+        android:layout_width="240dp"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="24dp"
+        android:orientation="horizontal">
+
+        <RadioButton
+            android:id="@+id/layout_tkl"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:buttonTint="#2196F3"
+            android:text="TKL"
+            android:textColor="#D4D4D4" />
+
+        <RadioButton
+            android:id="@+id/layout_t9"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:buttonTint="#2196F3"
+            android:text="T9"
+            android:textColor="#D4D4D4" />
+    </RadioGroup>
 
     <TextView
         android:id="@+id/tv_status"
