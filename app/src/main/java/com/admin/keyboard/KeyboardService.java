@@ -317,28 +317,28 @@ public class KeyboardService extends InputMethodService implements KeyboardView.
 
     private void updateLanguageLabel() {
         String label = "\uD83C\uDF10";
-        try {
-            InputMethodSubtype subtype = getCurrentInputMethodSubtype();
-            if (subtype != null) {
-                Locale locale = null;
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+            try {
+                InputMethodSubtype subtype = getCurrentInputMethodSubtype();
+                if (subtype != null) {
+                    Locale locale = null;
                     String tag = subtype.getLanguageTag();
                     if (tag != null && !tag.isEmpty()) {
                         locale = Locale.forLanguageTag(tag);
                     }
-                }
-                if (locale == null) {
-                    String loc = subtype.getLocale();
-                    if (loc != null && !loc.isEmpty()) {
-                        locale = new Locale(loc);
+                    if (locale == null) {
+                        String loc = subtype.getLocale();
+                        if (loc != null && !loc.isEmpty()) {
+                            locale = new Locale(loc);
+                        }
+                    }
+                    if (locale != null && !locale.getLanguage().isEmpty()) {
+                        label = locale.getLanguage().toUpperCase(locale);
                     }
                 }
-                if (locale != null && !locale.getLanguage().isEmpty()) {
-                    label = locale.getLanguage().toUpperCase(locale);
-                }
+            } catch (Exception e) {
+                // keep fallback label
             }
-        } catch (Exception e) {
-            // keep fallback label
         }
         languageLabel = label;
         updateModifierStates();
