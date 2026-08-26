@@ -10,18 +10,18 @@
         android:keyWidth="8.33%"
         android:rowEdgeFlags="top">
         <Key android:codes="-203" android:keyLabel="Esc" android:keyWidth="8.33%" />
-        <Key android:codes="112" android:keyLabel="F1" android:keyWidth="8.33%" />
-        <Key android:codes="113" android:keyLabel="F2" android:keyWidth="8.33%" />
-        <Key android:codes="114" android:keyLabel="F3" android:keyWidth="8.33%" />
-        <Key android:codes="115" android:keyLabel="F4" android:keyWidth="8.33%" />
-        <Key android:codes="116" android:keyLabel="F5" android:keyWidth="8.33%" />
-        <Key android:codes="117" android:keyLabel="F6" android:keyWidth="8.33%" />
-        <Key android:codes="118" android:keyLabel="F7" android:keyWidth="8.33%" />
-        <Key android:codes="119" android:keyLabel="F8" android:keyWidth="8.33%" />
-        <Key android:codes="120" android:keyLabel="F9" android:keyWidth="8.33%" />
-        <Key android:codes="121" android:keyLabel="F10" android:keyWidth="8.33%" />
-        <Key android:codes="122" android:keyLabel="F11" android:keyWidth="8.33%" />
-        <Key android:codes="123" android:keyLabel="F12" android:keyWidth="8.33%" />
+        <Key android:codes="-100" android:keyLabel="F1" android:keyWidth="8.33%" />
+        <Key android:codes="-101" android:keyLabel="F2" android:keyWidth="8.33%" />
+        <Key android:codes="-102" android:keyLabel="F3" android:keyWidth="8.33%" />
+        <Key android:codes="-103" android:keyLabel="F4" android:keyWidth="8.33%" />
+        <Key android:codes="-104" android:keyLabel="F5" android:keyWidth="8.33%" />
+        <Key android:codes="-105" android:keyLabel="F6" android:keyWidth="8.33%" />
+        <Key android:codes="-106" android:keyLabel="F7" android:keyWidth="8.33%" />
+        <Key android:codes="-107" android:keyLabel="F8" android:keyWidth="8.33%" />
+        <Key android:codes="-108" android:keyLabel="F9" android:keyWidth="8.33%" />
+        <Key android:codes="-109" android:keyLabel="F10" android:keyWidth="8.33%" />
+        <Key android:codes="-110" android:keyLabel="F11" android:keyWidth="8.33%" />
+        <Key android:codes="-111" android:keyLabel="F12" android:keyWidth="8.33%" />
     </Row>
 
     <!-- Row 1: Number row -->
@@ -98,6 +98,7 @@
         <Key android:codes="-200" android:keyLabel="Ctrl" android:keyWidth="10.42%" />
         <Key android:codes="-201" android:keyLabel="Alt" android:keyWidth="8.33%" />
         <Key android:codes="-202" android:keyLabel="Fn" android:keyWidth="8.33%" />
+        <Key android:codes="-205" android:keyLabel="&#127760;" android:keyWidth="8.33%" />
         <Key android:codes="32" android:keyLabel="" android:keyWidth="33.33%" />
         <Key android:codes="60" android:keyLabel="&lt;" android:keyWidth="8.33%" />
         <Key android:codes="-201" android:keyLabel="Alt" android:keyWidth="8.33%" />

@@ -1,20 +1,23 @@
 package com.admin.keyboard;
 
-import android.content.Context;
 import android.inputmethodservice.InputMethodService;
 import android.inputmethodservice.Keyboard;
 import android.inputmethodservice.Keyboard.Key;
 import android.inputmethodservice.KeyboardView;
-import android.os.Handler;
-import android.os.Looper;
+import android.os.Build;
+import android.os.IBinder;
 import android.view.HapticFeedbackConstants;
 import android.view.KeyEvent;
 import android.view.View;
 import android.view.inputmethod.EditorInfo;
 import android.view.inputmethod.InputConnection;
 import android.view.inputmethod.InputMethodManager;
+import android.view.inputmethod.InputMethodSubtype;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
+import java.util.Map;
 
 public class KeyboardService extends InputMethodService implements KeyboardView.OnKeyboardActionListener {
 
@@ -25,8 +28,33 @@ public class KeyboardService extends InputMethodService implements KeyboardView.
     private boolean isCtrl = false;
     private boolean isAlt = false;
     private boolean isFn = false;
-    private Handler repeatHandler;
-    private int repeatKeyCode = -1;
+    private String languageLabel = "\uD83C\uDF10";
+
+    private static final Map<Integer, String> SHIFTED_SYMBOLS = new HashMap<Integer, String>();
+
+    static {
+        SHIFTED_SYMBOLS.put((int) '`', "~");
+        SHIFTED_SYMBOLS.put((int) '1', "!");
+        SHIFTED_SYMBOLS.put((int) '2', "@");
+        SHIFTED_SYMBOLS.put((int) '3', "#");
+        SHIFTED_SYMBOLS.put((int) '4', "$");
+        SHIFTED_SYMBOLS.put((int) '5', "%");
+        SHIFTED_SYMBOLS.put((int) '6', "^");
+        SHIFTED_SYMBOLS.put((int) '7', "&");
+        SHIFTED_SYMBOLS.put((int) '8', "*");
+        SHIFTED_SYMBOLS.put((int) '9', "(");
+        SHIFTED_SYMBOLS.put((int) '0', ")");
+        SHIFTED_SYMBOLS.put((int) '-', "_");
+        SHIFTED_SYMBOLS.put((int) '=', "+");
+        SHIFTED_SYMBOLS.put((int) '[', "{");
+        SHIFTED_SYMBOLS.put((int) ']', "}");
+        SHIFTED_SYMBOLS.put((int) '\\', "|");
+        SHIFTED_SYMBOLS.put((int) ';', ":");
+        SHIFTED_SYMBOLS.put((int) '\'', "\"");
+        SHIFTED_SYMBOLS.put((int) ',', "<");
+        SHIFTED_SYMBOLS.put((int) '.', ">");
+        SHIFTED_SYMBOLS.put((int) '/', "?");
+    }
 
     private static final int KEY_DELETE = -5;
     private static final int KEY_SPACE = 32;
@@ -37,6 +65,9 @@ public class KeyboardService extends InputMethodService implements KeyboardView.
     private static final int KEY_FN = -202;
     private static final int KEY_ESC = -203;
     private static final int KEY_TAB = -204;
+    private static final int KEY_LANG = -205;
+    private static final int KEY_F1 = -100;
+    private static final int KEY_F12 = -111;
     private static final int KEY_CAPS = -50;
     private static final int KEY_LEFT = -51;
     private static final int KEY_RIGHT = -52;
@@ -58,6 +89,7 @@ public class KeyboardService extends InputMethodService implements KeyboardView.
         keyboardView.setKeyboard(qwertyKeyboard);
         keyboardView.setOnKeyboardActionListener(this);
         keyboardView.setPreviewEnabled(false);
+        updateLanguageLabel();
         return keyboardView;
     }
 
@@ -95,13 +127,16 @@ public class KeyboardService extends InputMethodService implements KeyboardView.
                 break;
             case KEY_CAPS:
                 isShifted = !isShifted;
-                keyboardView.setShifted(isShifted);
                 updateModifierStates();
                 break;
             case KEY_DELETE:
                 if (isCtrl) {
                     ic.sendKeyEvent(new KeyEvent(KeyEvent.ACTION_DOWN, KeyEvent.KEYCODE_DEL));
                     sendCtrlKey(KeyEvent.KEYCODE_DEL);
+                } else if (isShifted) {
+                    ic.deleteSurroundingText(0, 1);
+                    releaseShift();
+                    clearModifiers();
                 } else {
                     ic.deleteSurroundingText(1, 0);
                 }
@@ -175,25 +210,39 @@ public class KeyboardService extends InputMethodService implements KeyboardView.
                 sendKey(KeyEvent.KEYCODE_BREAK);
                 clearModifiers();
                 break;
+            case KEY_LANG:
+                switchNextInputLanguage();
+                break;
             default:
-                if (primaryCode > 0) {
+                if (primaryCode >= KEY_F12 && primaryCode <= KEY_F1) {
+                    sendKey(KeyEvent.KEYCODE_F1 + (primaryCode - KEY_F1));
+                    clearModifiers();
+                } else if (primaryCode > 0) {
+                    String text;
+                    if (isShifted) {
+                        String shiftedSymbol = SHIFTED_SYMBOLS.get(primaryCode);
+                        text = shiftedSymbol != null
+                                ? shiftedSymbol
+                                : String.valueOf(Character.toUpperCase((char) primaryCode));
+                    } else {
+                        text = String.valueOf((char) primaryCode);
+                    }
                     if (isCtrl) {
                         sendCtrlKey(primaryCode);
                     } else {
-                        char c = (char) primaryCode;
-                        if (isShifted) {
-                            c = Character.toUpperCase(c);
-                        }
-                        String text = String.valueOf(c);
                         ic.commitText(text, 1);
-                        if (isShifted && !isCtrl && !isAlt) {
-                            isShifted = false;
-                            keyboardView.setShifted(false);
-                        }
                     }
+                    releaseShift();
                     clearModifiers();
                 }
                 break;
+        }
+    }
+
+    private void releaseShift() {
+        isShifted = false;
+        if (keyboardView != null) {
+            keyboardView.setShifted(false);
         }
     }
 
@@ -204,6 +253,7 @@ public class KeyboardService extends InputMethodService implements KeyboardView.
         int metaState = 0;
         if (isCtrl) metaState |= KeyEvent.META_CTRL_ON;
         if (isAlt) metaState |= KeyEvent.META_ALT_ON;
+        if (isShifted) metaState |= KeyEvent.META_SHIFT_ON;
 
         ic.sendKeyEvent(new KeyEvent(0, 0, KeyEvent.ACTION_DOWN, keyCode, 0, metaState));
         ic.sendKeyEvent(new KeyEvent(0, 0, KeyEvent.ACTION_UP, keyCode, 0, metaState));
@@ -225,19 +275,73 @@ public class KeyboardService extends InputMethodService implements KeyboardView.
     }
 
     private void updateModifierStates() {
+        if (keyboardView == null || qwertyKeyboard == null) return;
         keyboardView.setShifted(isShifted);
-        // Update key labels for modifiers
+        // Update key labels for modifiers and language key
         List<Keyboard.Key> keys = qwertyKeyboard.getKeys();
         for (Keyboard.Key key : keys) {
-            if (key.codes[0] == KEY_CTRL) {
+            if (key.codes == null || key.codes.length == 0) continue;
+            int code = key.codes[0];
+            if (code == KEY_CTRL) {
                 key.label = isCtrl ? "Ctrl*" : "Ctrl";
-            } else if (key.codes[0] == KEY_ALT) {
+            } else if (code == KEY_ALT) {
                 key.label = isAlt ? "Alt*" : "Alt";
-            } else if (key.codes[0] == KEY_FN) {
+            } else if (code == KEY_FN) {
                 key.label = isFn ? "Fn*" : "Fn";
+            } else if (code == KEY_LANG) {
+                key.label = languageLabel;
             }
         }
         keyboardView.invalidateAllKeys();
+    }
+
+    private void switchNextInputLanguage() {
+        boolean switched = false;
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+            switched = switchToNextInputMethod(false);
+        } else if (keyboardView != null) {
+            InputMethodManager imm = (InputMethodManager) getSystemService(INPUT_METHOD_SERVICE);
+            IBinder token = keyboardView.getApplicationWindowToken();
+            if (imm != null && token != null) {
+                switched = imm.switchToNextInputMethod(token, false);
+            }
+        }
+        if (!switched) {
+            InputMethodManager imm = (InputMethodManager) getSystemService(INPUT_METHOD_SERVICE);
+            if (imm != null) {
+                imm.showInputMethodPicker();
+            }
+        }
+        clearModifiers();
+    }
+
+    private void updateLanguageLabel() {
+        String label = "\uD83C\uDF10";
+        try {
+            InputMethodSubtype subtype = getCurrentInputMethodSubtype();
+            if (subtype != null) {
+                Locale locale = null;
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+                    String tag = subtype.getLanguageTag();
+                    if (tag != null && !tag.isEmpty()) {
+                        locale = Locale.forLanguageTag(tag);
+                    }
+                }
+                if (locale == null) {
+                    String loc = subtype.getLocale();
+                    if (loc != null && !loc.isEmpty()) {
+                        locale = new Locale(loc);
+                    }
+                }
+                if (locale != null && !locale.getLanguage().isEmpty()) {
+                    label = locale.getLanguage().toUpperCase(locale);
+                }
+            }
+        } catch (Exception e) {
+            // keep fallback label
+        }
+        languageLabel = label;
+        updateModifierStates();
     }
 
     @Override

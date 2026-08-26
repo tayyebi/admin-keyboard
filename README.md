@@ -5,7 +5,8 @@ A tenkeyless (TKL) layout keyboard for Android with full function row, navigatio
 ## Features
 
 - **TKL Layout**: No numeric keypad, includes F1-F12, navigation keys, and arrow cluster
-- **Modifier Keys**: Ctrl, Alt, Fn, Shift with toggle states
+- **Modifier Keys**: Ctrl, Alt, Fn, Shift with toggle states and shifted symbol input (!@#$%^&*...)
+- **Language Switcher**: Globe key cycles installed keyboards/languages
 - **Dark Theme**: Modern dark UI similar to VS Code
 - **Full Navigation**: Home, End, Page Up, Page Down, Insert, Delete
 - **Special Keys**: Escape, Tab, Caps Lock, Print Screen, Scroll Lock, Pause
@@ -119,9 +120,9 @@ Copy the output to the `STORE_FILE_B64` secret.
 ┌─────────┬─────┬─────┬─────┬─────┬─────┬─────┬─────┬─────┬─────┬─────┬─────────┐
 │  Shift  │  z  │  x  │  c  │  v  │  b  │  n  │  m  │  ,  │  .  │  /  │  Shift  │
 └─────────┴─────┴─────┴─────┴─────┴─────┴─────┴─────┴─────┴─────┴─────┴─────────┘
-┌──────┬─────┬─────┬────────────────────┬─────┬─────┬──────┐
-│ Ctrl │ Alt │  Fn │                    │  <  │ Alt │ Ctrl │
-└──────┴─────┴─────┴────────────────────┴─────┴─────┴──────┘
+┌──────┬─────┬─────┬────┬────┬────────────────────┬─────┬─────┬──────┐
+│ Ctrl │ Alt │  Fn │ 🌐 │                    │  <  │ Alt │ Ctrl │
+└──────┴─────┴─────┴────┴────┴────────────────────┴─────┴─────┴──────┘
 ┌─────┬─────┬─────┐                                    ┌─────┐
 │ Ins │ Home│ PgUp│                                    │  ^  │
 └─────┴─────┴─────┘                                    └─────┘
