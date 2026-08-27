@@ -104,6 +104,52 @@ base64 -i release.keystore | tr -d '\n'
 
 Copy the output to the `STORE_FILE_B64` secret.
 
+### Generating each GitHub secret
+
+The release workflow reads four secrets from **Settings → Secrets and variables → Actions**.
+Generate them as follows (keep `STORE_PASSWORD`, `KEY_PASSWORD`, and `KEY_ALIAS`
+consistent with the values passed to `keytool` above):
+
+| Secret | What it is | How to generate |
+|--------|------------|-----------------|
+| `STORE_FILE_B64` | Base64 of the keystore file | `base64 -i release.keystore \| tr -d '\n'` — paste the output |
+| `STORE_PASSWORD` | Keystore password (`-storepass`) | Choose a strong password and pass it as `-storepass` to `keytool`. Example random 24-char password: `openssl rand -base64 18 \| tr -d '/+' \| head -c 24` |
+| `KEY_PASSWORD` | Key-entry password (`-keypass`) | Same approach as `STORE_PASSWORD`; it may be identical to or different from the keystore password. Pass as `-keypass` to `keytool` |
+| `KEY_ALIAS` | Alias of the key inside the keystore (`-alias`) | Whatever you used for `-alias` (e.g. `tkl-keyboard`) |
+
+Typical end-to-end sequence:
+
+```bash
+# 1. Pick passwords (record them securely — they cannot be recovered)
+STORE_PASSWORD=$(openssl rand -base64 18 | tr -d '/+' | head -c 24)
+KEY_PASSWORD=$(openssl rand -base64 18 | tr -d '/+' | head -c 24)
+KEY_ALIAS=tkl-keyboard
+
+# 2. Create the keystore using those values
+keytool -genkeypair -v \
+  -keystore release.keystore \
+  -alias "$KEY_ALIAS" \
+  -keyalg RSA -keysize 2048 \
+  -validity 10000 \
+  -storepass "$STORE_PASSWORD" \
+  -keypass "$KEY_PASSWORD" \
+  -dname "CN=Your Name, OU=Dev, O=Your Org, L=City, ST=State, C=US"
+
+# 3. Produce STORE_FILE_B64
+base64 -i release.keystore | tr -d '\n'
+
+# 4. Add the four values as GitHub Actions secrets:
+#    STORE_FILE_B64 = output of step 3
+#    STORE_PASSWORD = $STORE_PASSWORD
+#    KEY_PASSWORD   = $KEY_PASSWORD
+#    KEY_ALIAS      = $KEY_ALIAS
+```
+
+> If any of these four do not match the keystore (wrong password or alias, or a
+> corrupted `STORE_FILE_B64`), the release build fails at `packageRelease` with
+> `keystore password was incorrect`. After fixing the secrets, re-run the
+> `v2.3.0` workflow (Actions → the run → "Re-run all jobs").
+
 ## Layout
 
 ```
