@@ -5,23 +5,23 @@
     android:horizontalGap="0%"
     android:verticalGap="0dp">
     <Row>
-        <Key android:codes="-301" android:keyLabel="1  .?!" />
-        <Key android:codes="-302" android:keyLabel="2  ABC" />
-        <Key android:codes="-303" android:keyLabel="3  DEF" />
+        <Key android:codes="-301" android:keyLabel=".?1" />
+        <Key android:codes="-302" android:keyLabel="ABC2" />
+        <Key android:codes="-303" android:keyLabel="DEF3" />
     </Row>
     <Row>
-        <Key android:codes="-304" android:keyLabel="4  GHI" />
-        <Key android:codes="-305" android:keyLabel="5  JKL" />
-        <Key android:codes="-306" android:keyLabel="6  MNO" />
+        <Key android:codes="-304" android:keyLabel="GHI4" />
+        <Key android:codes="-305" android:keyLabel="JKL5" />
+        <Key android:codes="-306" android:keyLabel="MNO6" />
     </Row>
     <Row>
-        <Key android:codes="-307" android:keyLabel="7  PQRS" />
-        <Key android:codes="-308" android:keyLabel="8  TUV" />
-        <Key android:codes="-309" android:keyLabel="9  WXYZ" />
+        <Key android:codes="-307" android:keyLabel="PQRS7" />
+        <Key android:codes="-308" android:keyLabel="TUV8" />
+        <Key android:codes="-309" android:keyLabel="WXYZ9" />
     </Row>
     <Row>
         <Key android:codes="-205" android:keyLabel="EN" />
-        <Key android:codes="32" android:keyLabel="0  Space" />
+        <Key android:codes="32" android:keyLabel="Space0" />
         <Key android:codes="-5" android:keyLabel="Bksp" />
     </Row>
     <Row>

@@ -42,10 +42,10 @@ public class KeyboardService extends InputMethodService implements KeyboardView.
 
     private static final long T9_REPEAT_TIMEOUT_MS = 800;
     private static final String[] T9_ENGLISH = {
-            ".?!", "abc", "def", "ghi", "jkl", "mno", "pqrs", "tuv", "wxyz"
+            ".?!1", "abc2", "def3", "ghi4", "jkl5", "mno6", "pqrs7", "tuv8", "wxyz9"
     };
     private static final String[] T9_PERSIAN = {
-            "،؟.", "ابپت", "ثجچح", "خدذر", "زژسش", "صضطظ", "عغفق", "کگلم", "نوهی"
+            "،؟.1", "ابپت2", "ثجچح3", "خدذر4", "زژسش5", "صضطظ6", "عغفق7", "کگلم8", "نوهی9"
     };
 
     private static final Map<Integer, String> SHIFTED_SYMBOLS = new HashMap<Integer, String>();
@@ -162,16 +162,13 @@ public class KeyboardService extends InputMethodService implements KeyboardView.
                 updateModifierStates();
                 break;
             case KEY_DELETE:
-                if (isCtrl) {
-                    ic.sendKeyEvent(new KeyEvent(KeyEvent.ACTION_DOWN, KeyEvent.KEYCODE_DEL));
-                    sendCtrlKey(KeyEvent.KEYCODE_DEL);
-                } else if (isShifted) {
-                    ic.deleteSurroundingText(0, 1);
+                if (isShifted) {
                     releaseShift();
-                    clearModifiers();
+                    sendKey(KeyEvent.KEYCODE_FORWARD_DEL);
                 } else {
-                    ic.deleteSurroundingText(1, 0);
+                    sendKey(KeyEvent.KEYCODE_DEL);
                 }
+                clearModifiers();
                 break;
             case KEY_ENTER:
                 if (isCtrl) {
@@ -346,7 +343,7 @@ public class KeyboardService extends InputMethodService implements KeyboardView.
         String group = groups[groupIndex];
         long now = SystemClock.uptimeMillis();
         if (primaryCode == lastT9Code && now - lastT9PressTime < T9_REPEAT_TIMEOUT_MS) {
-            ic.deleteSurroundingText(1, 0);
+            sendKey(KeyEvent.KEYCODE_DEL);
             lastT9Index = (lastT9Index + 1) % group.length();
         } else {
             lastT9Index = 0;
