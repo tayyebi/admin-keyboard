@@ -8,7 +8,9 @@ An Android keyboard for administration work, with TKL and T9 layouts and English
 - **T9 Layout**: Compact multi-tap phone layout, selectable from Settings
 - **Modifier Keys**: Ctrl, Alt, Fn, Shift with toggle states and shifted symbol input (!@#$%^&*...)
 - **Language Switcher**: Globe key toggles between English and Persian
-- **Dark Theme**: Modern dark UI similar to VS Code
+- **Glass UI**: Keys are painted as translucent panes on a frosted sheet, with a lit
+  rim, a specular sheen and colour blooming underneath; held modifiers light up
+  rather than being relabelled, and the backdrop blurs on Android 12 and newer
 - **Full Navigation**: Home, End, Page Up, Page Down, Insert, Delete
 - **Special Keys**: Escape, Tab, Caps Lock, Print Screen, Scroll Lock, Pause
 

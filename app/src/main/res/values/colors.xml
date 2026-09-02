@@ -1,11 +1,19 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <color name="colorPrimary">#1E1E1E</color>
-    <color name="colorPrimaryDark">#121212</color>
-    <color name="colorAccent">#2196F3</color>
-    <color name="keyboardBackground">#1E1E1E</color>
-    <color name="keyBackground">#2D2D2D</color>
-    <color name="keyTextColor">#D4D4D4</color>
-    <color name="keyBorderColor">#3D3D3D</color>
-    <color name="modifierActive">#4CAF50</color>
+    <!-- Glass palette. Panes are translucent white over the frosted sheet, so most of
+         these carry an alpha channel rather than a flat colour. -->
+    <color name="surfaceDeep">#FF070A11</color>
+    <color name="surfaceSheet">#FF10151F</color>
+    <color name="accent">#FF6E9BFF</color>
+    <color name="accentSoft">#996E9BFF</color>
+    <color name="paneFill">#1FFFFFFF</color>
+    <color name="paneFillStrong">#33FFFFFF</color>
+    <color name="paneRim">#3DFFFFFF</color>
+    <color name="paneRimLit">#8AFFFFFF</color>
+    <color name="textPrimary">#FFEEF3FC</color>
+    <color name="textSecondary">#FFAFBCD2</color>
+    <color name="textMuted">#FF7C889C</color>
+    <color name="statusOk">#FF4ADE9B</color>
+    <color name="statusOff">#FFFF7A7A</color>
+    <color name="statusPending">#FFFFD166</color>
 </resources>

@@ -4,7 +4,9 @@ import android.inputmethodservice.InputMethodService;
 import android.inputmethodservice.Keyboard;
 import android.inputmethodservice.Keyboard.Key;
 import android.inputmethodservice.KeyboardView;
+import android.app.Dialog;
 import android.content.SharedPreferences;
+import android.os.Build;
 import android.os.Handler;
 import android.os.Looper;
 import android.os.SystemClock;
@@ -13,11 +15,12 @@ import android.view.InputDevice;
 import android.view.KeyCharacterMap;
 import android.view.KeyEvent;
 import android.view.View;
+import android.view.Window;
 import android.view.inputmethod.EditorInfo;
 import android.view.inputmethod.InputConnection;
 
+import java.util.Arrays;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 public class KeyboardService extends InputMethodService implements KeyboardView.OnKeyboardActionListener {
@@ -27,7 +30,7 @@ public class KeyboardService extends InputMethodService implements KeyboardView.
     public static final String LAYOUT_TKL = "tkl";
     public static final String LAYOUT_T9 = "t9";
 
-    private KeyboardView keyboardView;
+    private GlassKeyboardView keyboardView;
     private Keyboard currentKeyboard;
     private Keyboard englishKeyboard;
     private Keyboard persianKeyboard;
@@ -110,9 +113,30 @@ public class KeyboardService extends InputMethodService implements KeyboardView.
     private static final int KEY_SCROLLLOCK = -61;
     private static final int KEY_PAUSE = -62;
 
+    /** Radius of the backdrop blur, where the platform supports blurring behind a window. */
+    private static final float BLUR_RADIUS_DP = 42f;
+
+    @Override
+    public void onCreate() {
+        super.onCreate();
+        Dialog dialog = getWindow();
+        Window window = dialog != null ? dialog.getWindow() : null;
+        if (window == null) return;
+
+        // The sheet is translucent, so the window behind it must not paint an opaque
+        // background of its own; the drawable exists only to give the blur below an
+        // outline with the same rounded top corners the sheet is drawn with.
+        window.setBackgroundDrawable(getDrawable(R.drawable.keyboard_window));
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            // A no-op on devices where cross-window blur is off, so nothing to fall back to.
+            window.setBackgroundBlurRadius(Math.round(
+                    BLUR_RADIUS_DP * getResources().getDisplayMetrics().density));
+        }
+    }
+
     @Override
     public View onCreateInputView() {
-        keyboardView = (KeyboardView) getLayoutInflater().inflate(R.layout.keyboard_view, null);
+        keyboardView = (GlassKeyboardView) getLayoutInflater().inflate(R.layout.keyboard_view, null);
         englishKeyboard = new Keyboard(this, R.xml.keyboard_tkl);
         persianKeyboard = new Keyboard(this, R.xml.keyboard_tkl_fa);
         englishT9Keyboard = new Keyboard(this, R.xml.keyboard_t9);
@@ -457,24 +481,32 @@ public class KeyboardService extends InputMethodService implements KeyboardView.
         updateModifierStates();
     }
 
+    /**
+     * A latched modifier is drawn lit rather than relabelled, so the key still reads as
+     * "Ctrl" while it is held; only the language key's own label actually changes.
+     */
     private void updateModifierStates() {
         if (keyboardView == null || currentKeyboard == null) return;
-        // Update key labels for modifiers and language key
-        List<Keyboard.Key> keys = currentKeyboard.getKeys();
-        for (Keyboard.Key key : keys) {
+        for (Keyboard.Key key : currentKeyboard.getKeys()) {
             if (key.codes == null || key.codes.length == 0) continue;
-            int code = key.codes[0];
-            if (code == KEY_CTRL) {
-                key.label = isCtrl ? "Ctrl*" : "Ctrl";
-            } else if (code == KEY_ALT) {
-                key.label = isAlt ? "Alt*" : "Alt";
-            } else if (code == KEY_FN) {
-                key.label = isFn ? "Fn*" : "Fn";
-            } else if (code == KEY_LANG) {
-                key.label = languageLabel;
-            }
+            if (key.codes[0] == KEY_LANG) key.label = languageLabel;
         }
+        keyboardView.setActiveCodes(latchedCodes());
         keyboardView.invalidateAllKeys();
+    }
+
+    private int[] latchedCodes() {
+        int[] codes = new int[5];
+        int count = 0;
+        if (isCtrl) codes[count++] = KEY_CTRL;
+        if (isAlt) codes[count++] = KEY_ALT;
+        if (isFn) codes[count++] = KEY_FN;
+        if (isShifted) {
+            // Shift and Caps Lock drive the same flag, so they light together.
+            codes[count++] = KEY_SHIFT;
+            codes[count++] = KEY_CAPS;
+        }
+        return Arrays.copyOf(codes, count);
     }
 
     private void switchKeyboardLanguage() {

@@ -3,4 +3,16 @@
     <string name="app_name">Admin Keyboard</string>
     <string name="settings_title">Admin Keyboard Settings</string>
     <string name="subtype_label">Admin Keyboard</string>
+    <string name="tagline">English and Persian, tuned for admin work</string>
+    <string name="section_layout">Keyboard layout</string>
+    <string name="layout_tkl">TKL</string>
+    <string name="layout_t9">T9</string>
+    <string name="layout_hint_tkl">Full rows with function, navigation and arrow keys.</string>
+    <string name="layout_hint_t9">Compact multi-tap keypad for one-handed use.</string>
+    <string name="section_status">Status</string>
+    <string name="status_checking">Checking…</string>
+    <string name="status_enabled">Enabled</string>
+    <string name="status_disabled">Not enabled</string>
+    <string name="action_enable">Enable keyboard</string>
+    <string name="action_switch">Switch keyboard</string>
 </resources>

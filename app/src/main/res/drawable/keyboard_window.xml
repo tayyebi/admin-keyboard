@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    The keyboard window's own background. It paints nothing, since the sheet itself is
+    drawn in GlassKeyboardView, but its outline is what bounds the backdrop blur on
+    Android 12 and newer, so the rounded top corners are repeated here.
+-->
+<shape xmlns:android="http://schemas.android.com/apk/res/android"
+    android:shape="rectangle">
+    <solid android:color="@android:color/transparent" />
+    <corners
+        android:topLeftRadius="22dp"
+        android:topRightRadius="22dp" />
+</shape>

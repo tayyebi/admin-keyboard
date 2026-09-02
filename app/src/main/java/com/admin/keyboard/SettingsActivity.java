@@ -22,19 +22,22 @@ public class SettingsActivity extends Activity {
         Button switchButton = findViewById(R.id.btn_switch);
         TextView statusText = findViewById(R.id.tv_status);
         RadioGroup layoutGroup = findViewById(R.id.layout_group);
+        final TextView layoutHint = findViewById(R.id.tv_layout_hint);
 
         SharedPreferences preferences = getSharedPreferences(
                 KeyboardService.PREFS_NAME, MODE_PRIVATE);
         String layout = preferences.getString(
                 KeyboardService.PREF_LAYOUT, KeyboardService.LAYOUT_TKL);
-        layoutGroup.check(KeyboardService.LAYOUT_T9.equals(layout)
-                ? R.id.layout_t9 : R.id.layout_tkl);
+        boolean isT9 = KeyboardService.LAYOUT_T9.equals(layout);
+        layoutGroup.check(isT9 ? R.id.layout_t9 : R.id.layout_tkl);
+        layoutHint.setText(isT9 ? R.string.layout_hint_t9 : R.string.layout_hint_tkl);
         layoutGroup.setOnCheckedChangeListener(new RadioGroup.OnCheckedChangeListener() {
             @Override
             public void onCheckedChanged(RadioGroup group, int checkedId) {
-                String selected = checkedId == R.id.layout_t9
-                        ? KeyboardService.LAYOUT_T9 : KeyboardService.LAYOUT_TKL;
-                preferences.edit().putString(KeyboardService.PREF_LAYOUT, selected).apply();
+                boolean t9 = checkedId == R.id.layout_t9;
+                preferences.edit().putString(KeyboardService.PREF_LAYOUT,
+                        t9 ? KeyboardService.LAYOUT_T9 : KeyboardService.LAYOUT_TKL).apply();
+                layoutHint.setText(t9 ? R.string.layout_hint_t9 : R.string.layout_hint_tkl);
             }
         });
 
@@ -85,13 +88,9 @@ public class SettingsActivity extends Activity {
                 }
             }
 
-            if (isEnabled) {
-                statusText.setText("Status: ENABLED ✓");
-                statusText.setTextColor(0xFF4CAF50);
-            } else {
-                statusText.setText("Status: NOT ENABLED");
-                statusText.setTextColor(0xFFF44336);
-            }
+            statusText.setText(isEnabled ? R.string.status_enabled : R.string.status_disabled);
+            statusText.setTextColor(getResources().getColor(
+                    isEnabled ? R.color.statusOk : R.color.statusOff));
         }
     }
 }

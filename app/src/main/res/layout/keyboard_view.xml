@@ -1,13 +1,16 @@
 <?xml version="1.0" encoding="utf-8"?>
-<android.inputmethodservice.KeyboardView xmlns:android="http://schemas.android.com/apk/res/android"
+<!--
+    The surface paints itself, so it takes no background and no key drawable of its own.
+    Vertical padding leaves room for the grabber above the top row and clears the
+    gesture area below the bottom one; horizontal padding is left at zero because keys
+    are laid out against the display width, not the view's.
+-->
+<com.admin.keyboard.GlassKeyboardView
+    xmlns:android="http://schemas.android.com/apk/res/android"
     android:id="@+id/keyboard_view"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:background="#1E1E1E"
-    android:keyBackground="@drawable/key_background"
-    android:keyTextColor="#D4D4D4"
-    android:keyPreviewLayout="@layout/key_preview"
-    android:shadowColor="#000000"
-    android:shadowDx="0"
-    android:shadowDy="1"
-    android:shadowRadius="0.5" />
+    android:background="@null"
+    android:paddingTop="10dp"
+    android:paddingBottom="7dp"
+    android:keyBackground="@drawable/key_background" />
