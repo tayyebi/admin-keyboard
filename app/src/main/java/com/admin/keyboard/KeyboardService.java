@@ -280,8 +280,10 @@ public class KeyboardService extends InputMethodService implements KeyboardView.
                     } else {
                         text = String.valueOf((char) primaryCode);
                     }
-                    if (isCtrl) {
-                        sendCtrlKey(primaryCode);
+                    int comboKeyCode = isCtrl || isAlt
+                            ? keyCodeForChar((char) primaryCode) : KeyEvent.KEYCODE_UNKNOWN;
+                    if (comboKeyCode != KeyEvent.KEYCODE_UNKNOWN) {
+                        sendKey(comboKeyCode);
                     } else {
                         ic.commitText(text, 1);
                     }
@@ -300,22 +302,66 @@ public class KeyboardService extends InputMethodService implements KeyboardView.
     }
 
     private void sendKey(int keyCode) {
+        sendKeyWithModifiers(keyCode, isCtrl, isAlt, isShifted);
+    }
+
+    private void sendCtrlKey(int keyCode) {
+        sendKeyWithModifiers(keyCode, true, false, false);
+    }
+
+    /**
+     * Sends {@code keyCode} with the held modifiers pressed around it as real keys.
+     *
+     * Setting the modifier bits in metaState alone is not enough: an app that tracks
+     * modifiers from the key events it receives -- Flutter, and so any terminal drawn
+     * on top of it -- only counts Ctrl as held if it saw Ctrl go down, so Ctrl+C never
+     * read as an interrupt.
+     */
+    private void sendKeyWithModifiers(int keyCode, boolean ctrl, boolean alt, boolean shift) {
         InputConnection ic = getCurrentInputConnection();
         if (ic == null) return;
 
         int metaState = 0;
-        if (isCtrl) metaState |= KeyEvent.META_CTRL_ON;
-        if (isAlt) metaState |= KeyEvent.META_ALT_ON;
-        if (isShifted) metaState |= KeyEvent.META_SHIFT_ON;
+        if (ctrl) metaState |= KeyEvent.META_CTRL_ON | KeyEvent.META_CTRL_LEFT_ON;
+        if (alt) metaState |= KeyEvent.META_ALT_ON | KeyEvent.META_ALT_LEFT_ON;
+        if (shift) metaState |= KeyEvent.META_SHIFT_ON | KeyEvent.META_SHIFT_LEFT_ON;
+
+        long now = SystemClock.uptimeMillis();
+        if (ctrl) ic.sendKeyEvent(buildKeyEvent(now, KeyEvent.ACTION_DOWN, KeyEvent.KEYCODE_CTRL_LEFT, metaState));
+        if (alt) ic.sendKeyEvent(buildKeyEvent(now, KeyEvent.ACTION_DOWN, KeyEvent.KEYCODE_ALT_LEFT, metaState));
+        if (shift) ic.sendKeyEvent(buildKeyEvent(now, KeyEvent.ACTION_DOWN, KeyEvent.KEYCODE_SHIFT_LEFT, metaState));
 
         sendKeyEventPair(ic, keyCode, metaState);
+
+        if (shift) ic.sendKeyEvent(buildKeyEvent(now, KeyEvent.ACTION_UP, KeyEvent.KEYCODE_SHIFT_LEFT, metaState));
+        if (alt) ic.sendKeyEvent(buildKeyEvent(now, KeyEvent.ACTION_UP, KeyEvent.KEYCODE_ALT_LEFT, metaState));
+        if (ctrl) ic.sendKeyEvent(buildKeyEvent(now, KeyEvent.ACTION_UP, KeyEvent.KEYCODE_CTRL_LEFT, metaState));
     }
 
-    private void sendCtrlKey(int keyCode) {
-        InputConnection ic = getCurrentInputConnection();
-        if (ic == null) return;
-
-        sendKeyEventPair(ic, keyCode, KeyEvent.META_CTRL_ON);
+    /**
+     * Android key code for a typed character. The character itself is not one: 'c' is
+     * 99, which as a key code is KEYCODE_BUTTON_X, so Ctrl+C used to send Ctrl and a
+     * gamepad button. Returns KEYCODE_UNKNOWN for characters with no key of their own.
+     */
+    private int keyCodeForChar(char c) {
+        if (c >= 'a' && c <= 'z') return KeyEvent.KEYCODE_A + (c - 'a');
+        if (c >= 'A' && c <= 'Z') return KeyEvent.KEYCODE_A + (c - 'A');
+        if (c >= '0' && c <= '9') return KeyEvent.KEYCODE_0 + (c - '0');
+        switch (c) {
+            case ' ': return KeyEvent.KEYCODE_SPACE;
+            case '-': return KeyEvent.KEYCODE_MINUS;
+            case '=': return KeyEvent.KEYCODE_EQUALS;
+            case '[': return KeyEvent.KEYCODE_LEFT_BRACKET;
+            case ']': return KeyEvent.KEYCODE_RIGHT_BRACKET;
+            case '\\': return KeyEvent.KEYCODE_BACKSLASH;
+            case ';': return KeyEvent.KEYCODE_SEMICOLON;
+            case '\'': return KeyEvent.KEYCODE_APOSTROPHE;
+            case ',': return KeyEvent.KEYCODE_COMMA;
+            case '.': return KeyEvent.KEYCODE_PERIOD;
+            case '/': return KeyEvent.KEYCODE_SLASH;
+            case '`': return KeyEvent.KEYCODE_GRAVE;
+            default: return KeyEvent.KEYCODE_UNKNOWN;
+        }
     }
 
     /**
