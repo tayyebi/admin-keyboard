@@ -100,8 +100,10 @@ public class GlassKeyboardView extends KeyboardView {
         for (int code : codes) activeCodes.add(code);
     }
 
+    // Public rather than protected: KeyboardView widens this one, and an override
+    // cannot narrow it back.
     @Override
-    protected void onSizeChanged(int w, int h, int oldw, int oldh) {
+    public void onSizeChanged(int w, int h, int oldw, int oldh) {
         super.onSizeChanged(w, h, oldw, oldh);
         backdrop.resize(w, h);
         gradients.clear();
