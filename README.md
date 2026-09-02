@@ -38,7 +38,7 @@ This project uses GitHub Actions to build signed release APKs.
 
 ### Artifact Naming
 
-Release APKs are named: `tlk-keyboard-<version>.apk`
+Release APKs are named: `admin-keyboard-<version>.apk`
 
 ### Signing
 
