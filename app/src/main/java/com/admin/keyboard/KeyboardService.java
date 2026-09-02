@@ -5,8 +5,12 @@ import android.inputmethodservice.Keyboard;
 import android.inputmethodservice.Keyboard.Key;
 import android.inputmethodservice.KeyboardView;
 import android.content.SharedPreferences;
+import android.os.Handler;
+import android.os.Looper;
 import android.os.SystemClock;
 import android.view.HapticFeedbackConstants;
+import android.view.InputDevice;
+import android.view.KeyCharacterMap;
 import android.view.KeyEvent;
 import android.view.View;
 import android.view.inputmethod.EditorInfo;
@@ -38,7 +42,13 @@ public class KeyboardService extends InputMethodService implements KeyboardView.
     private String languageLabel = "EN";
     private int lastT9Code = 0;
     private int lastT9Index = 0;
-    private long lastT9PressTime = 0;
+    private final Handler t9Handler = new Handler(Looper.getMainLooper());
+    private final Runnable t9SessionTimeout = new Runnable() {
+        @Override
+        public void run() {
+            finishT9Session();
+        }
+    };
 
     private static final long T9_REPEAT_TIMEOUT_MS = 800;
     private static final String[] T9_ENGLISH = {
@@ -126,6 +136,7 @@ public class KeyboardService extends InputMethodService implements KeyboardView.
             currentKeyboard = getSelectedKeyboard();
             keyboardView.setKeyboard(currentKeyboard);
         }
+        clearT9State();
         isShifted = false;
         isCtrl = false;
         isAlt = false;
@@ -134,11 +145,25 @@ public class KeyboardService extends InputMethodService implements KeyboardView.
     }
 
     @Override
+    public void onFinishInputView(boolean finishingInput) {
+        // Commit whatever the multi-tap run settled on while the connection is still live.
+        finishT9Session();
+        super.onFinishInputView(finishingInput);
+    }
+
+    @Override
     public void onKey(int primaryCode, int[] keyCodes) {
         InputConnection ic = getCurrentInputConnection();
         if (ic == null) return;
         boolean isT9Character = isT9 && primaryCode <= -301 && primaryCode >= -309;
-        if (!isT9Character) lastT9Code = 0;
+        if (primaryCode == KEY_DELETE && lastT9Code != 0) {
+            // The character being cycled through was never committed, so backspace
+            // drops it rather than committing it and deleting it straight back out.
+            cancelT9Session();
+            clearModifiers();
+            return;
+        }
+        if (!isT9Character) finishT9Session();
 
         switch (primaryCode) {
             case KEY_SHIFT:
@@ -164,9 +189,9 @@ public class KeyboardService extends InputMethodService implements KeyboardView.
             case KEY_DELETE:
                 if (isShifted) {
                     releaseShift();
-                    sendKey(KeyEvent.KEYCODE_FORWARD_DEL);
+                    deleteForward();
                 } else {
-                    sendKey(KeyEvent.KEYCODE_DEL);
+                    deleteBackward();
                 }
                 clearModifiers();
                 break;
@@ -174,8 +199,7 @@ public class KeyboardService extends InputMethodService implements KeyboardView.
                 if (isCtrl) {
                     sendCtrlKey(KeyEvent.KEYCODE_ENTER);
                 } else {
-                    ic.sendKeyEvent(new KeyEvent(KeyEvent.ACTION_DOWN, KeyEvent.KEYCODE_ENTER));
-                    ic.sendKeyEvent(new KeyEvent(KeyEvent.ACTION_UP, KeyEvent.KEYCODE_ENTER));
+                    sendKeyEventPair(ic, KeyEvent.KEYCODE_ENTER, 0);
                 }
                 clearModifiers();
                 break;
@@ -284,16 +308,100 @@ public class KeyboardService extends InputMethodService implements KeyboardView.
         if (isAlt) metaState |= KeyEvent.META_ALT_ON;
         if (isShifted) metaState |= KeyEvent.META_SHIFT_ON;
 
-        ic.sendKeyEvent(new KeyEvent(0, 0, KeyEvent.ACTION_DOWN, keyCode, 0, metaState));
-        ic.sendKeyEvent(new KeyEvent(0, 0, KeyEvent.ACTION_UP, keyCode, 0, metaState));
+        sendKeyEventPair(ic, keyCode, metaState);
     }
 
     private void sendCtrlKey(int keyCode) {
         InputConnection ic = getCurrentInputConnection();
         if (ic == null) return;
 
-        ic.sendKeyEvent(new KeyEvent(0, 0, KeyEvent.ACTION_DOWN, keyCode, 0, KeyEvent.META_CTRL_ON));
-        ic.sendKeyEvent(new KeyEvent(0, 0, KeyEvent.ACTION_UP, keyCode, 0, KeyEvent.META_CTRL_ON));
+        sendKeyEventPair(ic, keyCode, KeyEvent.META_CTRL_ON);
+    }
+
+    /**
+     * Apps that read key events rather than the text we edited drop events whose
+     * timestamps, device and source are left at zero, so fill in the fields a real
+     * key press carries.
+     */
+    private void sendKeyEventPair(InputConnection ic, int keyCode, int metaState) {
+        long now = SystemClock.uptimeMillis();
+        ic.sendKeyEvent(buildKeyEvent(now, KeyEvent.ACTION_DOWN, keyCode, metaState));
+        ic.sendKeyEvent(buildKeyEvent(now, KeyEvent.ACTION_UP, keyCode, metaState));
+    }
+
+    private KeyEvent buildKeyEvent(long eventTime, int action, int keyCode, int metaState) {
+        return new KeyEvent(eventTime, eventTime, action, keyCode, 0, metaState,
+                KeyCharacterMap.VIRTUAL_KEYBOARD, 0,
+                KeyEvent.FLAG_SOFT_KEYBOARD | KeyEvent.FLAG_KEEP_TOUCH_MODE,
+                InputDevice.SOURCE_KEYBOARD);
+    }
+
+    /**
+     * Deletes the character before the cursor.
+     *
+     * Editing the text through the input connection is what ordinary fields honour,
+     * but a field that keeps no text in the buffer it hands the IME -- a terminal
+     * view, for instance -- would silently swallow that delete, so those get the key
+     * event instead. Only one of the two ever runs, so nothing deletes twice.
+     */
+    private void deleteBackward() {
+        InputConnection ic = getCurrentInputConnection();
+        if (ic == null) return;
+
+        // Ctrl+Backspace is an application shortcut (delete word), not a text edit.
+        if (isCtrl) {
+            sendKey(KeyEvent.KEYCODE_DEL);
+            return;
+        }
+
+        CharSequence selected = ic.getSelectedText(0);
+        if (selected != null && selected.length() > 0) {
+            ic.commitText("", 1);
+            return;
+        }
+
+        CharSequence before = ic.getTextBeforeCursor(2, 0);
+        if (before == null || before.length() == 0) {
+            sendKey(KeyEvent.KEYCODE_DEL);
+            return;
+        }
+        ic.deleteSurroundingText(trailingCharLength(before), 0);
+    }
+
+    private void deleteForward() {
+        InputConnection ic = getCurrentInputConnection();
+        if (ic == null) return;
+
+        CharSequence selected = ic.getSelectedText(0);
+        if (selected != null && selected.length() > 0) {
+            ic.commitText("", 1);
+            return;
+        }
+
+        CharSequence after = ic.getTextAfterCursor(2, 0);
+        if (after == null || after.length() == 0) {
+            sendKey(KeyEvent.KEYCODE_FORWARD_DEL);
+            return;
+        }
+        ic.deleteSurroundingText(0, leadingCharLength(after));
+    }
+
+    /** Number of chars the last code point of {@code text} occupies, so emoji go whole. */
+    private int trailingCharLength(CharSequence text) {
+        int end = text.length();
+        if (end >= 2 && Character.isHighSurrogate(text.charAt(end - 2))
+                && Character.isLowSurrogate(text.charAt(end - 1))) {
+            return 2;
+        }
+        return 1;
+    }
+
+    private int leadingCharLength(CharSequence text) {
+        if (text.length() >= 2 && Character.isHighSurrogate(text.charAt(0))
+                && Character.isLowSurrogate(text.charAt(1))) {
+            return 2;
+        }
+        return 1;
     }
 
     private void clearModifiers() {
@@ -324,6 +432,7 @@ public class KeyboardService extends InputMethodService implements KeyboardView.
     }
 
     private void switchKeyboardLanguage() {
+        finishT9Session();
         isPersian = !isPersian;
         currentKeyboard = getSelectedKeyboard();
         languageLabel = isPersian ? "FA" : "EN";
@@ -340,20 +449,53 @@ public class KeyboardService extends InputMethodService implements KeyboardView.
     private void handleT9Key(int primaryCode, InputConnection ic) {
         String[] groups = isPersian ? T9_PERSIAN : T9_ENGLISH;
         int groupIndex = -301 - primaryCode;
+        if (groupIndex < 0 || groupIndex >= groups.length) return;
         String group = groups[groupIndex];
-        long now = SystemClock.uptimeMillis();
-        if (primaryCode == lastT9Code && now - lastT9PressTime < T9_REPEAT_TIMEOUT_MS) {
-            sendKey(KeyEvent.KEYCODE_DEL);
+
+        if (primaryCode == lastT9Code) {
             lastT9Index = (lastT9Index + 1) % group.length();
         } else {
+            finishT9Session();
             lastT9Index = 0;
         }
+
         char character = group.charAt(lastT9Index);
         String text = String.valueOf(isShifted && !isPersian
                 ? Character.toUpperCase(character) : character);
-        ic.commitText(text, 1);
+        // Cycling replaces the composing text instead of deleting a committed
+        // character, so multi-tap still advances in fields that ignore a delete
+        // from the IME rather than piling the whole group into the field.
+        ic.setComposingText(text, 1);
+
         lastT9Code = primaryCode;
-        lastT9PressTime = now;
+        t9Handler.removeCallbacks(t9SessionTimeout);
+        t9Handler.postDelayed(t9SessionTimeout, T9_REPEAT_TIMEOUT_MS);
+    }
+
+    /** Commits the character the current multi-tap run settled on and ends the run. */
+    private void finishT9Session() {
+        boolean wasComposing = lastT9Code != 0;
+        clearT9State();
+        if (!wasComposing) return;
+        InputConnection ic = getCurrentInputConnection();
+        if (ic != null) ic.finishComposingText();
+    }
+
+    /** Drops the character the current multi-tap run was offering. */
+    private void cancelT9Session() {
+        boolean wasComposing = lastT9Code != 0;
+        clearT9State();
+        if (!wasComposing) return;
+        InputConnection ic = getCurrentInputConnection();
+        if (ic == null) return;
+        ic.setComposingText("", 1);
+        ic.finishComposingText();
+    }
+
+    private void clearT9State() {
+        t9Handler.removeCallbacks(t9SessionTimeout);
+        lastT9Code = 0;
+        lastT9Index = 0;
     }
 
     @Override
