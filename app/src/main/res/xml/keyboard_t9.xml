@@ -21,7 +21,7 @@
     </Row>
     <Row>
         <Key android:codes="-205" android:keyLabel="EN" />
-        <Key android:codes="32" android:keyLabel="Space0" />
+        <Key android:codes="32" android:keyLabel="0" />
         <Key android:codes="-5" android:keyLabel="Bksp" />
     </Row>
     <Row>

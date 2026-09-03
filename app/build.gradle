@@ -16,8 +16,8 @@ android {
         applicationId "com.admin.keyboard"
         minSdkVersion 21
         targetSdkVersion 33
-        versionCode 10
-        versionName "2.6.0"
+        versionCode 11
+        versionName "2.7.0"
     }
 
     signingConfigs {

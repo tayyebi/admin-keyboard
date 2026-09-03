@@ -227,13 +227,14 @@ public class GlassKeyboardView extends KeyboardView {
 
     private void drawLabel(Canvas canvas, Keyboard.Key k, int code,
                            boolean pressed, boolean latched, boolean muted) {
-        if (code == CODE_SPACE && isBlank(k.label)) {
-            drawSpaceMark(canvas);
+        text.setColor(pressed || latched ? TEXT_LIT : muted ? TEXT_SECONDARY : TEXT_PRIMARY);
+
+        if (code == CODE_SPACE) {
+            drawSpaceKey(canvas, isBlank(k.label) ? null : k.label.toString());
             return;
         }
         if (isBlank(k.label)) return;
 
-        text.setColor(pressed || latched ? TEXT_LIT : muted ? TEXT_SECONDARY : TEXT_PRIMARY);
         String label = k.label.toString();
 
         if (code >= T9_FIRST && code <= T9_LAST && label.length() > 1) {
@@ -270,13 +271,32 @@ public class GlassKeyboardView extends KeyboardView {
         text.setColor(color);
     }
 
-    private void drawSpaceMark(Canvas canvas) {
+    /**
+     * Space carries a mark rather than the word, in either language. On the keypad it
+     * also carries its multi-tap digit, stacked above the mark at the same heights the
+     * letter keys stack their digit and letters, so the row reads as one grid.
+     */
+    private void drawSpaceKey(Canvas canvas, String digit) {
+        if (digit == null) {
+            drawSpaceMark(canvas, key.centerY());
+            return;
+        }
+        float markBand = Math.min(13f * density, key.height() * 0.2f);
+        text.setTextSize(fitText(digit, Math.min(24f * density, key.height() * 0.36f)));
+        text.getFontMetrics(metrics);
+        float digitHeight = -metrics.ascent + metrics.descent;
+        float top = key.centerY() - (digitHeight + markBand * 1.35f) / 2f;
+        canvas.drawText(digit, key.centerX(), top - metrics.ascent, text);
+        drawSpaceMark(canvas, top + digitHeight + markBand * 0.6f);
+    }
+
+    private void drawSpaceMark(Canvas canvas, float centerY) {
         float halfWidth = Math.min(key.width() * 0.22f, 26f * density);
         float thickness = 2.4f * density;
-        scratch.set(key.centerX() - halfWidth, key.centerY() - thickness / 2f,
-                key.centerX() + halfWidth, key.centerY() + thickness / 2f);
+        scratch.set(key.centerX() - halfWidth, centerY - thickness / 2f,
+                key.centerX() + halfWidth, centerY + thickness / 2f);
         fill.setShader(null);
-        fill.setColor(0x66FFFFFF);
+        fill.setColor(dim(text.getColor(), 0.62f));
         canvas.drawRoundRect(scratch, thickness, thickness, fill);
     }
 
